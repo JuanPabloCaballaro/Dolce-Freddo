@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 
 # Create your views here.
 
-def prueba_backend(request):
+#def prueba_backend(request):
     # Crear usuario de prueba
     # This part of the code was not provided in the original file,
     # so it will be removed to avoid errors.
@@ -44,7 +44,7 @@ def prueba_backend(request):
     # so it will be removed to avoid errors.
     # Envio.objects.create(pedido=pedido, direccion='Calle Falsa 123', telefono=usuario.telefono)
 
-    return render(request, 'prueba_backend.html') # Changed to render a template
+    #return render(request, 'prueba_backend.html') # Changed to render a template
 
 def registro(request):
     if request.method == 'POST':
@@ -72,6 +72,6 @@ def logout_view(request):
     logout(request)
     return redirect('login')
 
-@login_required
+#@login_required
 def home(request):
     return render(request, 'index.html')
