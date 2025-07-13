@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dolce Freddo - Inicio{% endblock %}
+
+{% block content %}
+<!-- Hero Section con imagen principal completa -->
+<section class="hero-section position-relative d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%); min-height: 420px;">
+    <div class="w-100 h-100 position-absolute top-0 start-0" style="z-index:1;">
+        <img src="{% static 'img/Dolce-Freddo.jpg' %}" alt="Dolce Freddo" class="w-100 h-100" style="object-fit:contain; object-position:center; background:rgba(255,255,255,0.1);">
+    </div>
+    <div class="container position-relative text-center" style="z-index:2;">
+        <h1 class="display-3 fw-bold mb-3 text-white" style="text-shadow:2px 2px 8px #000;">Dolce Freddo</h1>
+        <p class="lead mb-4 text-white" style="text-shadow:1px 1px 6px #000;">Elegancia y frescura en cada elección</p>
+        <a href="{% url 'productos_lista' %}" class="btn btn-light btn-lg me-3">
+            <i class="fas fa-ice-cream me-2"></i>Ver Productos
+        </a>
+        {% if not user.is_authenticated %}
+        <a href="{% url 'registro' %}" class="btn btn-outline-light btn-lg">
+            <i class="fas fa-user-plus me-2"></i>Registrarse
+        </a>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Carrusel de Promociones -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-12 text-center">
+                <h2 class="fw-bold mb-3">Promociones Especiales</h2>
+                <p class="text-muted">¡Aprovechá nuestras promos exclusivas!</p>
+            </div>
+        </div>
+        {% if promos_imgs %}
+        <div id="promoCarousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner">
+                {% for img in promos_imgs %}
+                <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                    <img src="{% static 'img/promos/' %}{{ img }}" class="d-block w-100 rounded shadow" style="max-height:350px; object-fit:contain; background:#fff;" alt="Promo {{ forloop.counter }}">
+                </div>
+                {% endfor %}
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#promoCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Anterior</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#promoCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Siguiente</span>
+            </button>
+        </div>
+        {% else %}
+        <div class="text-center text-muted">No hay promociones disponibles.</div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Promociones Vigentes -->
+{% if promociones_vigentes %}
+<section class="py-5">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-12 text-center">
+                <h2 class="fw-bold mb-3">Promociones Vigentes</h2>
+                <p class="text-muted">¡Aprovechá estas ofertas especiales!</p>
+            </div>
+        </div>
+        <div class="row">
+            {% for promocion in promociones_vigentes %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    {% if promocion.imagen %}
+                        <img src="{{ promocion.imagen.url }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ promocion.nombre }}">
+                    {% else %}
+                        <div class="card-img-top bg-primary d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <i class="fas fa-percentage text-white" style="font-size: 3rem;"></i>
+                        </div>
+                    {% endif %}
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title mb-0">{{ promocion.nombre }}</h5>
+                            <span class="badge bg-danger">{{ promocion.get_tipo_display }}</span>
+                        </div>
+                        <p class="card-text text-muted">{{ promocion.descripcion|truncatewords:15 }}</p>
+                        
+                        <div class="mb-3">
+                            <span class="h4 text-success mb-0">
+                                {% if promocion.tipo == 'porcentaje' %}
+                                    -{{ promocion.descuento }}%
+                                {% elif promocion.tipo == 'monto_fijo' %}
+                                    -${{ promocion.descuento }}
+                                {% else %}
+                                    {{ promocion.get_tipo_display }}
+                                {% endif %}
+                            </span>
+                        </div>
+                        
+                        {% if promocion.dias_restantes > 0 %}
+                        <div class="mb-3">
+                            <small class="text-warning">
+                                <i class="fas fa-clock me-1"></i>
+                                {{ promocion.dias_restantes }} día{{ promocion.dias_restantes|pluralize:"s" }} restante{{ promocion.dias_restantes|pluralize:"s" }}
+                            </small>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mt-auto">
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'promocion_detalle' promocion.pk %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-eye me-1"></i>Ver Detalle
+                                </a>
+                                <a href="{% url 'promociones_lista' %}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-tags me-1"></i>Ver Todas
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-4">
+            <a href="{% url 'promociones_lista' %}" class="btn btn-outline-primary btn-lg">
+                <i class="fas fa-tags me-2"></i>Ver Todas las Promociones
+            </a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Sabores Populares -->
+<section class="py-5">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-12 text-center">
+                <h2 class="fw-bold mb-3">Nuestros Sabores</h2>
+                <p class="text-muted">Descubre la variedad de sabores que ofrecemos</p>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="d-flex flex-wrap justify-content-center gap-4">
+                {% for img in sabores_imgs %}
+                    <img src="{% static 'img/sabores/' %}{{ img }}" alt="{{ img|cut:'.png'|cut:'.jpg'|cut:'.jpeg'|cut:'.webp'|title }}" class="rounded-circle" style="width:100px; height:100px; object-fit:cover;">
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Agregar al carrito
+    $('.agregar-carrito').click(function() {
+        const productoId = $(this).data('producto-id');
+        const button = $(this);
+        $.ajax({
+            url: '{% url "agregar_al_carrito" %}',
+            method: 'POST',
+            data: {
+                'producto_id': productoId,
+                'cantidad': 1,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    $('#carrito-count').text(response.total_productos);
+                    button.html('<i class="fas fa-check me-1"></i>Agregado');
+                    button.removeClass('btn-primary').addClass('btn-success');
+                    setTimeout(function() {
+                        button.html('<i class="fas fa-cart-plus me-1"></i>Agregar al Carrito');
+                        button.removeClass('btn-success').addClass('btn-primary');
+                    }, 2000);
+                }
+            },
+            error: function() {
+                alert('Error al agregar al carrito');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

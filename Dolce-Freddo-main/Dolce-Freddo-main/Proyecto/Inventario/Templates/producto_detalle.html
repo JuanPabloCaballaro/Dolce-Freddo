@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ producto.nombre }} - Dolce Freddo{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Imagen del producto -->
+        <div class="col-lg-6 mb-4">
+            {% if producto.imagen %}
+                <img src="{{ producto.imagen.url }}" class="img-fluid rounded shadow" alt="{{ producto.nombre }}">
+            {% else %}
+                <div class="bg-light rounded shadow d-flex align-items-center justify-content-center" 
+                     style="height: 400px;">
+                    <i class="fas fa-ice-cream text-muted" style="font-size: 6rem;"></i>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Información del producto -->
+        <div class="col-lg-6">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'productos_lista' %}">Productos</a></li>
+                    <li class="breadcrumb-item active">{{ producto.nombre }}</li>
+                </ol>
+            </nav>
+            
+            <h1 class="fw-bold mb-3">{{ producto.nombre }}</h1>
+            
+            <!-- Categoría y estado -->
+            <div class="mb-3">
+                <span class="badge bg-info me-2">{{ producto.get_categoria_display }}</span>
+                {% if producto.destacado %}
+                    <span class="badge bg-warning">Destacado</span>
+                {% endif %}
+            </div>
+            
+            <!-- Precio -->
+            <div class="mb-4">
+                <span class="h2 text-primary fw-bold">${{ producto.precio }}</span>
+                {% if producto.stock < 10 %}
+                    <span class="badge bg-danger ms-2">Stock bajo</span>
+                {% endif %}
+            </div>
+            
+            <!-- Descripción -->
+            <div class="mb-4">
+                <h5>Descripción</h5>
+                <p class="text-muted">{{ producto.descripcion }}</p>
+            </div>
+            
+            <!-- Sabores -->
+            {% if producto.sabores.all %}
+            <div class="mb-4">
+                <h5>Sabores Disponibles</h5>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for sabor in producto.sabores.all %}
+                    <span class="sabor-tag" style="background-color: {{ sabor.color }};">
+                        {{ sabor.nombre }}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Información adicional -->
+            <div class="mb-4">
+                <div class="row">
+                    <div class="col-6">
+                        <small class="text-muted">Stock disponible:</small>
+                        <div class="fw-bold">{{ producto.stock }} unidades</div>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted">Fecha de creación:</small>
+                        <div class="fw-bold">{{ producto.fecha_creacion|date:"d/m/Y" }}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Acciones -->
+            <div class="d-grid gap-2">
+                {% if user.is_authenticated %}
+                    <button class="btn btn-primary btn-lg agregar-carrito-detalle" data-producto-id="{{ producto.pk }}">
+                        <i class="fas fa-cart-plus me-2"></i>Agregar al Carrito
+                    </button>
+                {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión para Comprar
+                    </a>
+                {% endif %}
+                
+                <a href="{% url 'productos_lista' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Volver a Productos
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Productos relacionados -->
+    {% if productos_relacionados %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3 class="fw-bold mb-4">
+                <i class="fas fa-star me-2"></i>Productos Relacionados
+            </h3>
+        </div>
+        {% for producto_rel in productos_relacionados %}
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card producto-card h-100">
+                {% if producto_rel.imagen %}
+                    <img src="{{ producto_rel.imagen.url }}" class="card-img-top producto-imagen" alt="{{ producto_rel.nombre }}">
+                {% else %}
+                    <div class="card-img-top producto-imagen bg-light d-flex align-items-center justify-content-center">
+                        <i class="fas fa-ice-cream text-muted" style="font-size: 3rem;"></i>
+                    </div>
+                {% endif %}
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ producto_rel.nombre }}</h5>
+                    <p class="card-text text-muted">{{ producto_rel.descripcion|truncatewords:8 }}</p>
+                    
+                    <!-- Sabores -->
+                    {% if producto_rel.sabores.all %}
+                    <div class="mb-3">
+                        {% for sabor in producto_rel.sabores.all %}
+                        <span class="sabor-tag" style="background-color: {{ sabor.color }};">
+                            {{ sabor.nombre }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mt-auto">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="h6 text-primary mb-0">${{ producto_rel.precio }}</span>
+                            <span class="badge bg-info">{{ producto_rel.get_categoria_display }}</span>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'producto_detalle' producto_rel.pk %}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-eye me-1"></i>Ver Detalle
+                            </a>
+                            {% if user.is_authenticated %}
+                            <button class="btn btn-primary btn-sm agregar-carrito" data-producto-id="{{ producto_rel.pk }}">
+                                <i class="fas fa-cart-plus me-1"></i>Agregar al Carrito
+                            </button>
+                            {% else %}
+                            <a href="{% url 'login' %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-sign-in-alt me-1"></i>Iniciar Sesión
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Agregar al carrito desde detalle
+    $('.agregar-carrito-detalle').click(function() {
+        const productoId = $(this).data('producto-id');
+        const button = $(this);
+        
+        $.ajax({
+            url: '{% url "agregar_al_carrito" %}',
+            method: 'POST',
+            data: {
+                'producto_id': productoId,
+                'cantidad': 1,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Actualizar contador del carrito
+                    $('#carrito-count').text(response.total_productos);
+                    
+                    // Mostrar mensaje de éxito
+                    button.html('<i class="fas fa-check me-2"></i>Agregado al Carrito');
+                    button.removeClass('btn-primary').addClass('btn-success');
+                    
+                    setTimeout(function() {
+                        button.html('<i class="fas fa-cart-plus me-2"></i>Agregar al Carrito');
+                        button.removeClass('btn-success').addClass('btn-primary');
+                    }, 3000);
+                }
+            },
+            error: function() {
+                alert('Error al agregar al carrito');
+            }
+        });
+    });
+    
+    // Agregar al carrito desde productos relacionados
+    $('.agregar-carrito').click(function() {
+        const productoId = $(this).data('producto-id');
+        const button = $(this);
+        
+        $.ajax({
+            url: '{% url "agregar_al_carrito" %}',
+            method: 'POST',
+            data: {
+                'producto_id': productoId,
+                'cantidad': 1,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Actualizar contador del carrito
+                    $('#carrito-count').text(response.total_productos);
+                    
+                    // Mostrar mensaje de éxito
+                    button.html('<i class="fas fa-check me-1"></i>Agregado');
+                    button.removeClass('btn-primary').addClass('btn-success');
+                    
+                    setTimeout(function() {
+                        button.html('<i class="fas fa-cart-plus me-1"></i>Agregar al Carrito');
+                        button.removeClass('btn-success').addClass('btn-primary');
+                    }, 2000);
+                }
+            },
+            error: function() {
+                alert('Error al agregar al carrito');
+            }
+        });
+    });
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+
+{% block title %}Administrar Productos - Dolce Freddo{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="fw-bold">
+                <i class="fas fa-ice-cream me-2"></i>Administrar Productos
+            </h2>
+            <p class="text-muted">Gestiona todos los productos de la heladería</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'admin_producto_crear' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Nuevo Producto
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-6">
+                    <input type="text" name="q" class="form-control" placeholder="Buscar productos..." 
+                           value="{{ q }}">
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-outline-primary w-100">
+                        <i class="fas fa-search me-2"></i>Buscar
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'admin_productos' %}" class="btn btn-outline-secondary w-100">
+                        <i class="fas fa-times me-2"></i>Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla de productos -->
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>Lista de Productos
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if page_obj %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Imagen</th>
+                                <th>Nombre</th>
+                                <th>Categoría</th>
+                                <th>Precio</th>
+                                <th>Stock</th>
+                                <th>Estado</th>
+                                <th>Destacado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for producto in page_obj %}
+                            <tr>
+                                <td>
+                                    {% if producto.imagen %}
+                                        <img src="{{ producto.imagen.url }}" 
+                                             class="rounded" style="width: 50px; height: 50px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                             style="width: 50px; height: 50px;">
+                                            <i class="fas fa-ice-cream text-muted"></i>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <strong>{{ producto.nombre }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ producto.descripcion|truncatewords:5 }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ producto.get_categoria_display }}</span>
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-primary">${{ producto.precio }}</span>
+                                </td>
+                                <td>
+                                    {% if producto.stock < 10 %}
+                                        <span class="badge bg-danger">{{ producto.stock }}</span>
+                                    {% elif producto.stock < 30 %}
+                                        <span class="badge bg-warning">{{ producto.stock }}</span>
+                                    {% else %}
+                                        <span class="badge bg-success">{{ producto.stock }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if producto.activo %}
+                                        <span class="badge bg-success">Activo</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Inactivo</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if producto.destacado %}
+                                        <span class="badge bg-warning">Destacado</span>
+                                    {% else %}
+                                        <span class="badge bg-light text-dark">Normal</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'producto_detalle' producto.pk %}" 
+                                           class="btn btn-outline-primary btn-sm" title="Ver">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'admin_producto_editar' producto.pk %}" 
+                                           class="btn btn-outline-warning btn-sm" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'admin_producto_eliminar' producto.pk %}" 
+                                           class="btn btn-outline-danger btn-sm" title="Eliminar">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginación -->
+                {% if page_obj.has_other_pages %}
+                <nav aria-label="Navegación de páginas">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if q %}&q={{ q }}{% endif %}">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if q %}&q={{ q }}{% endif %}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if q %}&q={{ q }}{% endif %}">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-ice-cream text-muted" style="font-size: 4rem;"></i>
+                    <h4 class="mt-3 text-muted">No hay productos</h4>
+                    <p class="text-muted">Crea tu primer producto para empezar</p>
+                    <a href="{% url 'admin_producto_crear' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Crear Producto
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

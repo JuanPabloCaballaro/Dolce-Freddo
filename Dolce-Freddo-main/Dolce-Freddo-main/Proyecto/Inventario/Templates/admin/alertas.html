@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+
+{% block title %}Alertas - Dolce Freddo{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="fw-bold">
+                <i class="fas fa-bell me-2"></i>Panel de Alertas
+            </h2>
+            <p class="text-muted">Mantente informado sobre el estado de tu heladería</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <span class="badge bg-danger fs-6">{{ alertas_no_leidas }} sin leer</span>
+        </div>
+    </div>
+
+    <!-- Alertas -->
+    <div class="row">
+        <div class="col-lg-8">
+            {% if alertas %}
+                {% for alerta in alertas %}
+                <div class="card mb-3 alerta-item {% if not alerta.leida %}border-warning{% endif %}" 
+                     data-alerta-id="{{ alerta.id }}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center mb-2">
+                                    {% if alerta.tipo == 'stock' %}
+                                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                                    {% elif alerta.tipo == 'pedido' %}
+                                        <i class="fas fa-shopping-cart text-primary me-2"></i>
+                                    {% elif alerta.tipo == 'envio' %}
+                                        <i class="fas fa-truck text-info me-2"></i>
+                                    {% elif alerta.tipo == 'sistema' %}
+                                        <i class="fas fa-cog text-secondary me-2"></i>
+                                    {% elif alerta.tipo == 'promocion' %}
+                                        <i class="fas fa-tag text-success me-2"></i>
+                                    {% endif %}
+                                    
+                                    <h5 class="mb-0">{{ alerta.titulo }}</h5>
+                                    
+                                    {% if not alerta.leida %}
+                                        <span class="badge bg-warning ms-2">Nueva</span>
+                                    {% endif %}
+                                </div>
+                                
+                                <p class="text-muted mb-2">{{ alerta.mensaje }}</p>
+                                
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock me-1"></i>
+                                        {{ alerta.fecha_creacion|date:"d/m/Y H:i" }}
+                                    </small>
+                                    
+                                    <span class="badge bg-{% if alerta.tipo == 'stock' %}warning{% elif alerta.tipo == 'pedido' %}primary{% elif alerta.tipo == 'envio' %}info{% elif alerta.tipo == 'sistema' %}secondary{% elif alerta.tipo == 'promocion' %}success{% endif %}">
+                                        {{ alerta.get_tipo_display }}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            {% if not alerta.leida %}
+                            <button class="btn btn-outline-warning btn-sm marcar-leida" 
+                                    data-alerta-id="{{ alerta.id }}" title="Marcar como leída">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                
+                <!-- Paginación si hay muchas alertas -->
+                {% if alertas.has_other_pages %}
+                <nav aria-label="Navegación de alertas">
+                    <ul class="pagination justify-content-center">
+                        {% if alertas.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ alertas.previous_page_number }}">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in alertas.paginator.page_range %}
+                            {% if alertas.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > alertas.number|add:'-3' and num < alertas.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if alertas.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ alertas.next_page_number }}">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+                
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-bell-slash text-muted" style="font-size: 4rem;"></i>
+                    <h4 class="mt-3 text-muted">No hay alertas</h4>
+                    <p class="text-muted">Todo está funcionando perfectamente</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Panel lateral -->
+        <div class="col-lg-4">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Resumen
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <div class="border rounded p-3">
+                                <i class="fas fa-exclamation-triangle text-warning" style="font-size: 2rem;"></i>
+                                <h4 class="mt-2 mb-0">{{ alertas_no_leidas }}</h4>
+                                <small class="text-muted">Sin leer</small>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="border rounded p-3">
+                                <i class="fas fa-bell text-primary" style="font-size: 2rem;"></i>
+                                <h4 class="mt-2 mb-0">{{ alertas|length }}</h4>
+                                <small class="text-muted">Total</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h6 class="fw-bold mb-3">Tipos de Alertas</h6>
+                    <div class="mb-2">
+                        <span class="badge bg-warning me-2">Stock</span>
+                        <small class="text-muted">Productos con stock bajo</small>
+                    </div>
+                    <div class="mb-2">
+                        <span class="badge bg-primary me-2">Pedidos</span>
+                        <small class="text-muted">Nuevos pedidos recibidos</small>
+                    </div>
+                    <div class="mb-2">
+                        <span class="badge bg-info me-2">Envíos</span>
+                        <small class="text-muted">Estado de entregas</small>
+                    </div>
+                    <div class="mb-2">
+                        <span class="badge bg-secondary me-2">Sistema</span>
+                        <small class="text-muted">Notificaciones del sistema</small>
+                    </div>
+                    <div class="mb-2">
+                        <span class="badge bg-success me-2">Promociones</span>
+                        <small class="text-muted">Ofertas especiales</small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Acciones rápidas -->
+            <div class="card mt-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>Acciones Rápidas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'admin_productos' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-ice-cream me-2"></i>Gestionar Productos
+                        </a>
+                        <a href="{% url 'admin_pedidos' %}" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-shopping-cart me-2"></i>Ver Pedidos
+                        </a>
+                        <a href="{% url 'admin_sabores' %}" class="btn btn-outline-warning btn-sm">
+                            <i class="fas fa-palette me-2"></i>Gestionar Sabores
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Marcar alerta como leída
+    $('.marcar-leida').click(function() {
+        const alertaId = $(this).data('alerta-id');
+        const alertaItem = $(this).closest('.alerta-item');
+        
+        $.ajax({
+            url: '{% url "admin_alertas" %}',
+            method: 'POST',
+            data: {
+                'alerta_id': alertaId,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Remover badge de nueva
+                    alertaItem.find('.badge').remove();
+                    // Remover botón de marcar como leída
+                    alertaItem.find('.marcar-leida').remove();
+                    // Cambiar borde
+                    alertaItem.removeClass('border-warning');
+                    
+                    // Actualizar contador
+                    const contador = parseInt($('.badge.bg-danger').text());
+                    $('.badge.bg-danger').text(contador - 1);
+                }
+            },
+            error: function() {
+                alert('Error al marcar la alerta como leída');
+            }
+        });
+    });
+});
+</script>
+{% endblock %} 

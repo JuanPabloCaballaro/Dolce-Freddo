@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Crear Pedido - Dolce Freddo{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">Crear Pedido</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Confirmar Pedido</button>
+    </form>
+    <h3 class="mt-5">Productos en tu carrito</h3>
+    <ul>
+        {% for item in productos_carrito %}
+            <li>{{ item.producto.nombre }} x {{ item.cantidad }}</li>
+        {% endfor %}
+    </ul>
+    <p class="mt-3"><strong>Total:</strong> ${{ total_carrito }}</p>
+</div>
+{% endblock %} 

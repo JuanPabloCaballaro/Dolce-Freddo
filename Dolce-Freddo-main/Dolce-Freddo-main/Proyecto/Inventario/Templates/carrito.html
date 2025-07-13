@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+
+{% block title %}Mi Carrito - Dolce Freddo{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-shopping-cart me-2"></i>Mi Carrito
+                    </h3>
+                </div>
+                <div class="card-body">
+                    {% if productos_carrito %}
+                        {% for carrito_producto in productos_carrito %}
+                        <div class="row align-items-center mb-4 carrito-producto" data-id="{{ carrito_producto.id }}">
+                            <div class="col-md-2">
+                                {% if carrito_producto.producto.imagen %}
+                                    <img src="{{ carrito_producto.producto.imagen.url }}" 
+                                         class="img-fluid rounded" alt="{{ carrito_producto.producto.nombre }}">
+                                {% else %}
+                                    <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                         style="height: 80px;">
+                                        <i class="fas fa-ice-cream text-muted"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <h5 class="mb-1">{{ carrito_producto.producto.nombre }}</h5>
+                                <p class="text-muted mb-0">{{ carrito_producto.producto.descripcion|truncatewords:8 }}</p>
+                                
+                                <!-- Sabores seleccionados -->
+                                {% if carrito_producto.sabores_seleccionados.all %}
+                                <div class="mt-2">
+                                    {% for sabor in carrito_producto.sabores_seleccionados.all %}
+                                    <span class="sabor-tag" style="background-color: {{ sabor.color }};">
+                                        {{ sabor.nombre }}
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-2">
+                                <span class="h6 text-primary">${{ carrito_producto.producto.precio }}</span>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="input-group input-group-sm">
+                                    <button class="btn btn-outline-secondary btn-cantidad" 
+                                            data-action="decrease" data-id="{{ carrito_producto.id }}">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <input type="number" class="form-control text-center cantidad-input" 
+                                           value="{{ carrito_producto.cantidad }}" min="1" max="10"
+                                           data-id="{{ carrito_producto.id }}">
+                                    <button class="btn btn-outline-secondary btn-cantidad" 
+                                            data-action="increase" data-id="{{ carrito_producto.id }}">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <span class="h6 text-success subtotal-item">${{ carrito_producto.subtotal }}</span>
+                            </div>
+                            <div class="col-md-1">
+                                <button class="btn btn-outline-danger btn-sm eliminar-item" 
+                                        data-id="{{ carrito_producto.id }}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-shopping-cart text-muted" style="font-size: 4rem;"></i>
+                            <h4 class="mt-3 text-muted">Tu carrito está vacío</h4>
+                            <p class="text-muted">Agrega algunos productos deliciosos para empezar</p>
+                            <a href="{% url 'productos_lista' %}" class="btn btn-primary">
+                                <i class="fas fa-ice-cream me-2"></i>Ver Productos
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-calculator me-2"></i>Resumen
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if productos_carrito %}
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Subtotal:</span>
+                            <span class="fw-bold">${{ total_carrito }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Envío:</span>
+                            <span class="text-success">Gratis</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-4">
+                            <span class="h5">Total:</span>
+                            <span class="h5 text-primary">${{ total_carrito }}</span>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'crear_pedido' %}" class="btn btn-success btn-lg">
+                                <i class="fas fa-credit-card me-2"></i>Finalizar Compra
+                            </a>
+                            <a href="{% url 'productos_lista' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-plus me-2"></i>Seguir Comprando
+                            </a>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Envío gratuito</strong> en pedidos superiores a $5000
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-shopping-bag text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-muted mt-3">No hay productos en tu carrito</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Actualizar cantidad
+    $('.btn-cantidad').click(function() {
+        const action = $(this).data('action');
+        const id = $(this).data('id');
+        const input = $(`.cantidad-input[data-id="${id}"]`);
+        let cantidad = parseInt(input.val());
+        
+        if (action === 'increase' && cantidad < 10) {
+            cantidad++;
+        } else if (action === 'decrease' && cantidad > 1) {
+            cantidad--;
+        }
+        
+        input.val(cantidad);
+        actualizarCantidad(id, cantidad);
+    });
+    
+    // Cambio directo en input
+    $('.cantidad-input').change(function() {
+        const id = $(this).data('id');
+        const cantidad = parseInt($(this).val());
+        
+        if (cantidad < 1) {
+            $(this).val(1);
+        } else if (cantidad > 10) {
+            $(this).val(10);
+        }
+        
+        actualizarCantidad(id, $(this).val());
+    });
+    
+    // Eliminar producto
+    $('.eliminar-item').click(function() {
+        const id = $(this).data('id');
+        const row = $(this).closest('.carrito-producto');
+        
+        if (confirm('¿Estás seguro de que quieres eliminar este producto?')) {
+            $.ajax({
+                url: '{% url "eliminar_del_carrito" %}',
+                method: 'POST',
+                data: {
+                    'carrito_producto_id': id,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    row.fadeOut(function() {
+                        $(this).remove();
+                        actualizarResumen();
+                    });
+                },
+                error: function() {
+                    alert('Error al eliminar el producto');
+                }
+            });
+        }
+    });
+    
+    function actualizarCantidad(id, cantidad) {
+        $.ajax({
+            url: '{% url "actualizar_carrito" %}',
+            method: 'POST',
+            data: {
+                'carrito_producto_id': id,
+                'cantidad': cantidad,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                // Actualizar subtotal del item
+                const row = $(`.carrito-producto[data-id="${id}"]`);
+                const precio = parseFloat(row.find('.text-primary').text().replace('$', ''));
+                const subtotal = precio * cantidad;
+                row.find('.subtotal-item').text('$' + subtotal.toFixed(2));
+                
+                actualizarResumen();
+            },
+            error: function() {
+                alert('Error al actualizar la cantidad');
+            }
+        });
+    }
+    
+    function actualizarResumen() {
+        // Recalcular total
+        let total = 0;
+        $('.subtotal-item').each(function() {
+            total += parseFloat($(this).text().replace('$', ''));
+        });
+        
+        $('.text-primary').text('$' + total.toFixed(2));
+        $('#carrito-count').text($('.carrito-producto').length);
+    }
+});
+</script>
+{% endblock %} 

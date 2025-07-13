@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Mis Pedidos - Dolce Freddo{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">Mis Pedidos</h1>
+    {% if pedidos %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Fecha</th>
+                        <th>Estado</th>
+                        <th>Total</th>
+                        <th>Detalle</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pedido in pedidos %}
+                    <tr>
+                        <td>{{ pedido.id }}</td>
+                        <td>{{ pedido.fecha|date:"d/m/Y H:i" }}</td>
+                        <td>{{ pedido.get_estado_display }}</td>
+                        <td>${{ pedido.total }}</td>
+                        <td>
+                            <a href="{% url 'pedido_detalle' pedido.id %}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-eye me-1"></i>Ver Detalle
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info mt-4">
+            <i class="fas fa-info-circle me-2"></i>No tienes pedidos realizados aún.
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 
